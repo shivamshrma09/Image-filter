@@ -403,39 +403,122 @@
 </head>
 
 <body>
-  <input type="file" id="fileInput" accept="image/*" style="margin:20px;">
-  <button class="toolbar-btn" onclick="rotateImage()">Rotate</button>
-  <button class="toolbar-btn" onclick="flipImage('h')">Flip H</button>
-  <button class="toolbar-btn" onclick="flipImage('v')">Flip V</button>
-  <button class="toolbar-btn" onclick="addText()">Add Text</button>
-  <button class="toolbar-btn" onclick="undo()">Undo</button>
-  <button class="toolbar-btn" onclick="redo()">Redo</button>
-  <button class="toolbar-btn" onclick="resetImage()">Reset</button>
-  <button class="toolbar-btn" onclick="showBeforeAfter()">Before/After</button>
-  <button class="toolbar-btn" onclick="preset('brighten')">Brighten</button>
-  <button class="toolbar-btn" onclick="preset('bw')">B/W</button>
-  <button class="toolbar-btn" onclick="preset('funky')">Funky</button>
-  <button class="toolbar-btn" onclick="preset('vintage')">Vintage</button>
-  <button class="toolbar-btn" onclick="downloadImage('png')">Download PNG</button>
-  <button class="toolbar-btn" id="toggleMode">Dark/Light</button>
-  <button class="toolbar-btn" onclick="toggleSlidingControls()">Filters</button>
-  <canvas id="canvas" width="600" height="400"></canvas>
-  <canvas id="beforeCanvas" width="600" height="400"></canvas>
-  <div id="slidingControls">
-    <div style="padding:10px;">
-      <label>Brightness <input type="range" id="brightness" min="0" max="200" value="100" oninput="applyFilter()"><span id="brightnessVal">100</span></label><br>
-      <label>Contrast <input type="range" id="contrast" min="0" max="200" value="100" oninput="applyFilter()"><span id="contrastVal">100</span></label><br>
-      <label>Grayscale <input type="range" id="grayscale" min="0" max="100" value="0" oninput="applyFilter()"><span id="grayscaleVal">0</span></label><br>
-      <label>Saturate <input type="range" id="saturate" min="0" max="300" value="100" oninput="applyFilter()"><span id="saturateVal">100</span></label><br>
-      <label>Sepia <input type="range" id="sepia" min="0" max="200" value="0" oninput="applyFilter()"><span id="sepiaVal">0</span></label><br>
-      <label>Hue <input type="range" id="hue" min="0" max="360" value="0" oninput="applyFilter()"><span id="hueVal">0</span></label><br>
-      <label>Blur <input type="range" id="blur" min="0" max="10" value="0" oninput="applyFilter()"><span id="blurVal">0</span></label><br>
-      <label>Invert <input type="range" id="invert" min="0" max="100" value="0" oninput="applyFilter()"><span id="invertVal">0</span></label><br>
-      <label>Opacity <input type="range" id="opacity" min="0" max="100" value="100" oninput="applyFilter()"><span id="opacityVal">100</span></label>
+  <nav>
+    <div class="nav-wrapper">
+      <span class="nav-header">InShot Image Editor</span>
+      <span class="toggle-mode material-icons" id="toggleMode" title="Toggle dark/light mode">brightness_4</span>
+    </div>
+  </nav>
+  <div class="floating-upload" onclick="document.getElementById('fileInput').click()">
+    <i class="material-icons">cloud_upload</i>
+    Upload Image
+    <input id="fileInput" type="file" accept="image/*" style="display:none" onchange="uploadImage(event)">
+  </div>
+  <div class="main-canvas-wrap">
+    <div class="canvas-shadow" id="canvasWrap">
+      <canvas id="canvas" width="420" height="420"></canvas>
+      <canvas id="beforeCanvas" class="before-after-slider" style="display:none;"></canvas>
     </div>
   </div>
-  <div id="snackbar"></div>
+  <div class="sliding-controls" id="slidingControls">
+    <button class="close-panel-btn material-icons" onclick="toggleSlidingControls()">close</button>
+    <h6><i class="material-icons left">tune</i>Filters</h6>
+    <div class="filter-slider"><label>Brightness</label>
+      <input type="range" id="brightness" min="0" max="300" value="100" onchange="applyFilter()">
+      <span class="slider-value" id="brightnessVal">100</span>
+    </div>
+    <div class="filter-slider"><label>Contrast</label>
+      <input type="range" id="contrast" min="0" max="200" value="100" onchange="applyFilter()">
+      <span class="slider-value" id="contrastVal">100</span>
+    </div>
+    <div class="filter-slider"><label>Grayscale</label>
+      <input type="range" id="grayscale" min="0" max="100" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="grayscaleVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Saturation</label>
+      <input type="range" id="saturate" min="0" max="300" value="100" onchange="applyFilter()">
+      <span class="slider-value" id="saturateVal">100</span>
+    </div>
+    <div class="filter-slider"><label>Sepia</label>
+      <input type="range" id="sepia" min="0" max="200" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="sepiaVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Hue</label>
+      <input type="range" id="hue" min="0" max="360" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="hueVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Blur</label>
+      <input type="range" id="blur" min="0" max="10" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="blurVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Invert</label>
+      <input type="range" id="invert" min="0" max="100" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="invertVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Opacity</label>
+      <input type="range" id="opacity" min="10" max="100" value="100" onchange="applyFilter()">
+      <span class="slider-value" id="opacityVal">100</span>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="preset-btn" onclick="preset('brighten')">Brighten</button>
+      <button class="preset-btn" onclick="preset('bw')">B&W</button>
+      <button class="preset-btn" onclick="preset('funky')">Funky</button>
+      <button class="preset-btn" onclick="preset('vintage')">Vintage</button>
+    </div>
+  </div>
+  <div class="bottom-toolbar">
+    <button class="toolbar-btn" onclick="toggleSlidingControls()">
+      <span class="material-icons">palette</span>
+      Filters
+    </button>
+    <button class="toolbar-btn" onclick="addText()">
+      <span class="material-icons">text_fields</span>
+      Text
+    </button>
+    <button class="toolbar-btn" onclick="rotateImage()">
+      <span class="material-icons">rotate_right</span>
+      Rotate
+    </button>
+    <button class="toolbar-btn" onclick="flipImage('h')">
+      <span class="material-icons">swap_horiz</span>
+      Flip H
+    </button>
+    <button class="toolbar-btn" onclick="flipImage('v')">
+      <span class="material-icons">swap_vert</span>
+      Flip V
+    </button>
+    <button class="toolbar-btn" onclick="showBeforeAfter()">
+      <span class="material-icons">compare</span>
+      Compare
+    </button>
+    <button class="toolbar-btn" onclick="undo()">
+      <span class="material-icons">undo</span>
+      Undo
+    </button>
+    <button class="toolbar-btn" onclick="redo()">
+      <span class="material-icons">redo</span>
+      Redo
+    </button>
+    <button class="toolbar-btn" onclick="resetImage()">
+      <span class="material-icons">refresh</span>
+      Reset
+    </button>
+    <button class="toolbar-btn" onclick="downloadImage('png')">
+      <span class="material-icons">file_download</span>
+      PNG
+    </button>
+    <button class="toolbar-btn" onclick="downloadImage('jpg')">
+      <span class="material-icons">file_download</span>
+      JPG
+    </button>
+  </div>
+  <div class="snackbar" id="snackbar"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+
 <script>
+  // ========== GLOBALS ==========
   let canvas = document.getElementById('canvas');
   let ctx = canvas.getContext('2d');
   let beforeCanvas = document.getElementById('beforeCanvas');
@@ -449,6 +532,7 @@
   let flipH = false, flipV = false;
   let textElements = [];
   let darkMode = false;
+
   const slidingControls = document.getElementById('slidingControls');
   const filterIds = ["brightness","contrast","grayscale","saturate","sepia","hue","blur","invert","opacity"];
   const filterDefaults = {
@@ -456,6 +540,8 @@
     hue:0, blur:0, invert:0, opacity:100
   };
   let currentFilterState = {};
+
+  // ========== INITIALIZATION ==========
   function init() {
     filterIds.forEach(id => {
       document.getElementById(id).value = filterDefaults[id];
@@ -469,6 +555,8 @@
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     saveHistory();
   }
+
+  // ========== FILE UPLOAD ==========
   document.getElementById('fileInput').onchange = uploadImage;
   function uploadImage(e) {
     const file = e.target.files ? e.target.files[0] : e.dataTransfer.files[0];
@@ -479,6 +567,7 @@
     const reader = new FileReader();
     reader.onload = function(ev) {
       img.onload = function() {
+        // Responsive canvas sizing
         const maxWidth = window.innerWidth * 0.9;
         const maxHeight = window.innerHeight * 0.7;
         let newWidth = img.width, newHeight = img.height;
@@ -502,6 +591,8 @@
     };
     reader.readAsDataURL(file);
   }
+
+  // ========== APPLY FILTERS & REDRAW CANVAS ==========
   function applyFilter() {
     if (!imgLoaded) return;
     filterIds.forEach(id => {
@@ -525,13 +616,17 @@
     ctx.filter = 'none';
     saveHistory();
   }
+
   function drawTransformedElements() {
     ctx.save();
+    // Center and rotate/flip
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
     ctx.rotate(rotation * Math.PI / 180);
+    // Draw image centered
     ctx.drawImage(img, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
     ctx.restore();
+    // Draw text
     textElements.forEach(textObj => {
       ctx.save();
       ctx.font = `${textObj.size}px ${textObj.font}`;
@@ -544,6 +639,8 @@
       ctx.restore();
     });
   }
+
+  // ========== PRESETS ==========
   function preset(type) {
     resetFilters();
     if (type === "brighten") {
@@ -566,6 +663,8 @@
     applyFilter();
     showSnackbar(`${type.charAt(0).toUpperCase() + type.slice(1)} preset applied!`);
   }
+
+  // ========== RESET FUNCTIONS ==========
   function resetFilters() {
     filterIds.forEach(id => {
       document.getElementById(id).value = filterDefaults[id];
@@ -585,6 +684,8 @@
     };
     img.src = imgDataURL;
   }
+
+  // ========== UNDO/REDO SYSTEM ==========
   function saveHistory() {
     if (!imgLoaded) return;
     const currentState = {
@@ -645,11 +746,14 @@
     restoreState(nextState);
     showSnackbar("Redo successful!");
   }
+
+  // ========== IMAGE TRANSFORMATIONS ==========
   function rotateImage() {
     if (!imgLoaded) {
       showSnackbar("Please load an image first!");
       return;
     }
+    // Swap canvas dimensions for 90/270
     if (rotation % 180 === 0) {
       [canvas.width, canvas.height] = [canvas.height, canvas.width];
       [beforeCanvas.width, beforeCanvas.height] = [beforeCanvas.height, beforeCanvas.width];
@@ -668,6 +772,8 @@
     applyFilter();
     showSnackbar(`Image flipped ${dir === 'h' ? 'horizontally' : 'vertically'}!`);
   }
+
+  // ========== BEFORE/AFTER COMPARISON ==========
   function showBeforeAfter() {
     if (!imgLoaded) {
       showSnackbar("No image to compare!");
@@ -683,6 +789,8 @@
       canvas.style.display = "block";
     }, 1800);
   }
+
+  // ========== DOWNLOAD IMAGE ==========
   function downloadImage(format) {
     if (!imgLoaded) {
       showSnackbar("No image to download!");
@@ -697,17 +805,23 @@
     document.body.removeChild(a);
     showSnackbar(`Downloaded as ${format.toUpperCase()}!`);
   }
+
+  // ========== DARK/LIGHT MODE TOGGLE ==========
   document.getElementById('toggleMode').onclick = function() {
     darkMode = !darkMode;
     document.body.classList.toggle('dark-mode', darkMode);
     showSnackbar(darkMode ? "Dark mode activated!" : "Light mode activated!");
   }
+
+  // ========== SNACKBAR NOTIFICATIONS ==========
   function showSnackbar(msg) {
     let sb = document.getElementById('snackbar');
     sb.innerText = msg;
     sb.classList.add('show');
     setTimeout(() => sb.classList.remove('show'), 1600);
   }
+
+  // ========== TEXT ADDITION ==========
   function addText() {
     if (!imgLoaded) {
       showSnackbar("Please load an image first to add text!");
@@ -731,11 +845,13 @@
       showSnackbar("Text addition cancelled or empty!");
     }
   }
+  // Edit text on double click
   canvas.addEventListener('dblclick', function(e) {
     if (!imgLoaded) return;
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
+    // Find nearest text
     let found = false;
     textElements.forEach((text, i) => {
       if (Math.abs(x - text.x) < 60 && Math.abs(y - text.y) < 30) {
@@ -749,6 +865,8 @@
     });
     if (found) showSnackbar("Text edited!");
   });
+
+  // ========== SLIDING CONTROLS ==========
   function toggleSlidingControls() {
     slidingControls.classList.toggle('active');
   }
@@ -762,12 +880,17 @@
   slidingControls.addEventListener('touchmove', (e) => {
     e.stopPropagation();
   }, false);
+
+  // ========== PREVENT CONTEXT MENU ON CANVAS ==========
   canvas.oncontextmenu = (e) => {
     e.preventDefault();
     return false;
   };
+
+  // ========== RESPONSIVE CANVAS ON RESIZE ==========
   window.addEventListener('resize', () => {
     if(imgLoaded) {
+      // Recalculate canvas size based on new window dimensions
       const maxWidth = window.innerWidth * 0.9;
       const maxHeight = window.innerHeight * 0.7;
       let newWidth = img.width, newHeight = img.height;
@@ -784,6 +907,8 @@
       applyFilter();
     }
   });
+
+  // ========== INIT ON LOAD ==========
   init();
 </script>
 </body>
