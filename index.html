@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>InShot Style Image Editor</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+
+  <style>
+    /* InShot-Inspired CSS */
+    :root {
+      --main-bg: #f8f6ff;
+      --accent: #a259ff;
+      --accent2: #f24e1e;
+      --accent3: #ff7262;
+      --card-bg: rgba(255,255,255,0.85);
+      --glass: rgba(255,255,255,0.6);
+      --shadow: 0 8px 32px rgba(162,89,255,0.15);
+      --toolbar-bg: rgba(255,255,255,0.95);
+      --toolbar-shadow: 0 -2px 18px rgba(162,89,255,0.10);
+      --dark-bg: #232526;
+      --dark-card: #2c2c2c;
+      --dark-toolbar: #19191a;
+      --dark-accent: #a259ff;
+    }
+    body {
+      background: linear-gradient(120deg, #f0f2f5 0%, #e0e8f0 100%); /* Softer, muted gradient */
+      font-family: 'Roboto', Arial, sans-serif;
+      min-height: 100vh;
+      margin: 0;
+      transition: background 0.4s;
+      color: #333; /* Darker text for better contrast */
+      overflow-x: hidden; /* Prevent horizontal scroll */
+    }
+    body.dark-mode {
+      background: linear-gradient(120deg, #1a1a1a 0%, #2c2c2c 100%); /* Darker, sleek gradient */
+      color: #e0e0e0;
+    }
+
+    /* Top bar - More InShot-like */
+    .nav-wrapper {
+      background: var(--toolbar-bg); /* Use toolbar background for consistency */
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05); /* Subtle shadow */
+      padding: 0 16px; /* Padding for content */
+      display: flex;
+      align-items: center;
+      height: 56px; /* Standard app bar height */
+      justify-content: space-between; /* Space out items */
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(8px);
+      border-bottom: none; /* Remove border if using shadow */
+    }
+    body.dark-mode .nav-wrapper {
+      background: var(--dark-toolbar);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    }
+    .nav-header {
+      font-size: 1.4rem; /* Slightly smaller, more refined */
+      font-weight: 500; /* Less bold */
+      letter-spacing: 0.5px;
+      color: var(--accent); /* Your accent color */
+      text-shadow: none; /* Remove text shadow */
+      margin-left: 8px; /* Give some space from edge */
+    }
+    .toggle-mode {
+      position: static; /* Remove absolute positioning */
+      font-size: 1.8rem; /* Smaller icon */
+      color: var(--accent);
+      cursor: pointer;
+      margin-right: 8px; /* Give some space from edge */
+      padding: 4px;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+    .toggle-mode:hover {
+      background: rgba(162,89,255,0.1);
+    }
+
+    /* Central Canvas - Better centering and proportions */
+    .main-canvas-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; /* Center vertically if space allows */
+      margin: 20px 0 90px 0; /* Adjust margins */
+      width: 100%;
+      min-height: calc(100vh - 56px - 78px); /* Fill available space */
+    }
+    .canvas-shadow {
+      background: var(--card-bg);
+      border-radius: 16px; /* Softer corners */
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08); /* Softer shadow */
+      padding: 12px; /* Smaller padding */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background 0.3s;
+      width: fit-content; /* Fit content size */
+      max-width: 95vw; /* Slightly more aggressive max width */
+      max-height: calc(100vh - 180px); /* Limit height to prevent overflow on small screens */
+      box-sizing: border-box; /* Include padding in width/height */
+    }
+    body.dark-mode .canvas-shadow {
+      background: var(--dark-card);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    #canvas {
+      display: block;
+      border-radius: 12px; /* Softer corners */
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05); /* Very subtle shadow */
+      background: #fff; /* Still white for clarity */
+      max-width: 100%; /* Ensure it fits within its container */
+      max-height: 100%;
+      object-fit: contain; /* Ensure image scales properly within canvas */
+    }
+    #beforeCanvas {
+        border-radius: 12px; /* Consistent with #canvas */
+        box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+        background: #fff;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+    }
+
+    /* Floating file upload - More integrated look */
+    .floating-upload {
+      position: fixed; /* Fixed position */
+      top: 68px; /* Below top bar */
+      left: 16px; /* Consistent padding */
+      z-index: 10;
+      background: var(--accent); /* Solid accent color */
+      color: #fff; /* White text */
+      border-radius: 24px; /* Pill shape */
+      box-shadow: 0 4px 12px rgba(162,89,255,0.3); /* Stronger shadow */
+      padding: 8px 16px; /* Compact padding */
+      cursor: pointer;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px; /* Smaller gap */
+      transition: background 0.2s, box-shadow 0.2s;
+      border: none; /* Remove border */
+    }
+    .floating-upload:hover {
+      background: var(--accent3); /* Lighter accent on hover */
+      box-shadow: 0 4px 16px rgba(255,114,98,0.4);
+    }
+    body.dark-mode .floating-upload {
+      background: var(--dark-accent);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(162,89,255,0.3);
+    }
+
+    /* Bottom Toolbar - This is crucial for InShot style */
+    .bottom-toolbar {
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      width: 100vw;
+      background: var(--toolbar-bg);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.08); /* Stronger top shadow */
+      display: flex;
+      justify-content: space-around; /* Distribute items evenly */
+      align-items: center;
+      height: 72px; /* Slightly smaller height */
+      z-index: 100;
+      border-radius: 18px 18px 0 0; /* Softer top corners */
+      backdrop-filter: blur(15px); /* Stronger blur */
+      padding: 0 4vw; /* Reduce horizontal padding */
+      transition: background 0.3s, box-shadow 0.3s;
+      overflow-x: auto; /* Allow horizontal scroll if many buttons */
+      white-space: nowrap; /* Prevent wrapping */
+      -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
+    body.dark-mode .bottom-toolbar {
+      background: var(--dark-toolbar);
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+    }
+    .toolbar-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center; /* Center content within button */
+      background: none;
+      border: none;
+      color: #555; /* Muted text color */
+      font-size: 0.85rem; /* Smaller font size */
+      font-weight: 500;
+      cursor: pointer;
+      outline: none;
+      transition: color 0.2s, transform 0.2s;
+      padding: 4px 8px; /* Add some padding */
+      min-width: 60px; /* Minimum width for buttons */
+    }
+    .toolbar-btn .material-icons {
+      font-size: 2rem; /* Slightly smaller icons */
+      margin-bottom: 2px;
+      color: #888; /* Muted icon color */
+      transition: color 0.2s, transform 0.2s;
+    }
+    .toolbar-btn.active,
+    .toolbar-btn:hover {
+      color: var(--accent); /* Accent color on active/hover */
+      transform: translateY(-2px); /* Subtle lift effect */
+    }
+    .toolbar-btn.active .material-icons,
+    .toolbar-btn:hover .material-icons {
+      color: var(--accent); /* Accent color for icons */
+    }
+    body.dark-mode .toolbar-btn {
+      color: #ccc;
+    }
+    body.dark-mode .toolbar-btn .material-icons {
+      color: #aaa;
+    }
+    body.dark-mode .toolbar-btn.active,
+    body.dark-mode .toolbar-btn:hover {
+      color: var(--dark-accent);
+    }
+    body.dark-mode .toolbar-btn.active .material-icons,
+    body.dark-mode .toolbar-btn:hover .material-icons {
+      color: var(--dark-accent);
+    }
+
+    /* Floating controls panel - Now a sliding panel */
+    .sliding-controls {
+      position: fixed;
+      right: 0;
+      top: 0;
+      height: 100vh;
+      width: 320px; /* Default width for desktop */
+      background: var(--card-bg);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+      padding: 16px;
+      overflow-y: auto;
+      z-index: 101; /* Above toolbar */
+      transition: transform 0.3s ease-out;
+      transform: translateX(100%); /* Start off-screen */
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-sizing: border-box; /* Include padding in width */
+      backdrop-filter: blur(15px);
+      border-left: 1px solid rgba(0,0,0,0.05); /* Subtle border */
+    }
+    .sliding-controls.active {
+      transform: translateX(0%); /* Slide in */
+    }
+    body.dark-mode .sliding-controls {
+      background: var(--dark-card);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+      border-left: 1px solid rgba(255,255,255,0.05);
+    }
+
+    /* Close button for sliding panel */
+    .close-panel-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 2rem;
+      cursor: pointer;
+      z-index: 10;
+      transition: color 0.2s;
+    }
+    .close-panel-btn:hover {
+      color: var(--accent);
+    }
+    body.dark-mode .close-panel-btn {
+      color: #aaa;
+    }
+    body.dark-mode .close-panel-btn:hover {
+      color: var(--dark-accent);
+    }
+
+    .sliding-controls h6 {
+      font-size: 1rem; /* Slightly smaller heading */
+      color: var(--accent);
+      margin-bottom: 8px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+    }
+    .sliding-controls h6 .material-icons {
+      font-size: 1.2em; /* Icon size relative to text */
+      margin-right: 6px;
+      color: var(--accent2); /* Accent color for icon */
+    }
+    .filter-slider {
+      display: flex;
+      align-items: center;
+      gap: 12px; /* Increase gap */
+      margin-bottom: 2px;
+    }
+    .filter-slider label {
+      min-width: 70px; /* Adjust width */
+      font-weight: 500;
+      color: #666; /* Muted label color */
+      font-size: 0.95rem; /* Slightly smaller font */
+    }
+    body.dark-mode .filter-slider label {
+      color: #bbb;
+    }
+    .slider-value {
+      font-size: 0.85rem;
+      color: var(--accent2);
+      min-width: 28px; /* Adjust width */
+      text-align: right;
+      font-weight: 600;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px; /* Thinner track */
+      background: #e0e0e0; /* Lighter track color */
+      border-radius: 3px;
+      outline: none;
+      transition: background 0.2s;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; /* Smaller thumb */
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent); /* Accent color for thumb */
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(162,89,255,0.2);
+      margin-top: -6px; /* Center thumb on track */
+    }
+    input[type=range]::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(162,89,255,0.2);
+    }
+    body.dark-mode input[type=range] {
+      background: #555;
+    }
+    body.dark-mode input[type=range]::-webkit-slider-thumb {
+      background: var(--dark-accent);
+    }
+
+    /* Preset buttons - InShot style pill buttons */
+    .preset-btn {
+      margin: 4px 6px; /* Smaller margins */
+      border-radius: 20px; /* More rounded */
+      font-weight: 500; /* Less bold */
+      letter-spacing: 0.2px;
+      background: var(--accent);
+      color: #fff;
+      padding: 6px 14px; /* More compact padding */
+      box-shadow: 0 2px 8px rgba(162,89,255,0.2);
+      transition: background 0.2s, box-shadow 0.2s;
+      border: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .preset-btn:hover {
+      background: var(--accent3); /* Lighter accent on hover */
+      box-shadow: 0 2px 10px rgba(255,114,98,0.3);
+    }
+    body.dark-mode .preset-btn {
+      background: var(--dark-accent);
+      box-shadow: 0 2px 8px rgba(162,89,255,0.3);
+    }
+    body.dark-mode .preset-btn:hover {
+      background: #9047e0; /* Lighter dark accent */
+    }
+
+    /* Mobile Responsive Adjustments */
+    @media (max-width: 900px) {
+      .floating-upload { top: 12px; left: 12px; padding: 6px 12px; font-size: 0.9rem; }
+      .bottom-toolbar { height: 68px; padding: 0 2vw; }
+      .toolbar-btn { min-width: 50px; font-size: 0.8rem; padding: 2px 4px; }
+      .toolbar-btn .material-icons { font-size: 1.8rem; }
+      .sliding-controls {
+          width: 85%; /* Wider on small screens */
+          max-width: 320px; /* Still limit max width */
+          padding: 10px 12px;
+          gap: 8px;
+      }
+      .filter-slider label { min-width: 60px; font-size: 0.9rem; }
+      .slider-value { font-size: 0.8rem; min-width: 24px; }
+    }
+    @media (max-width: 600px) {
+      .nav-wrapper { height: 50px; }
+      .nav-header { font-size: 1.2rem; }
+      .toggle-mode { font-size: 1.6rem; }
+      .main-canvas-wrap { margin-top: 10px; margin-bottom: 80px; }
+      .canvas-shadow { border-radius: 8px; padding: 6px; }
+      #canvas { border-radius: 6px; }
+      .bottom-toolbar { height: 60px; border-radius: 12px 12px 0 0; }
+      .floating-upload { top: 8px; left: 8px; padding: 5px 10px; font-size: 0.85rem; }
+      .preset-btn { padding: 5px 10px; font-size: 0.85rem; }
+    }
+
+    /* Snackbar - Refined */
+    .snackbar {
+      position: fixed;
+      left: 50%;
+      bottom: 120px; /* Adjust if toolbar height changes */
+      transform: translateX(-50%);
+      background: #333; /* Darker background */
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 20px;
+      font-size: 1rem;
+      z-index: 9999;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .snackbar.show { opacity: 1; pointer-events: all; }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="nav-wrapper">
+      <span class="nav-header">InShot Image Editor</span>
+      <span class="toggle-mode material-icons" id="toggleMode" title="Toggle dark/light mode">brightness_4</span>
+    </div>
+  </nav>
+  <div class="floating-upload" onclick="document.getElementById('fileInput').click()">
+    <i class="material-icons">cloud_upload</i>
+    Upload Image
+    <input id="fileInput" type="file" accept="image/*" style="display:none" onchange="uploadImage(event)">
+  </div>
+  <div class="main-canvas-wrap">
+    <div class="canvas-shadow" id="canvasWrap">
+      <canvas id="canvas" width="420" height="420"></canvas>
+      <canvas id="beforeCanvas" class="before-after-slider" style="display:none;"></canvas>
+    </div>
+  </div>
+  <div class="sliding-controls" id="slidingControls">
+    <button class="close-panel-btn material-icons" onclick="toggleSlidingControls()">close</button>
+    <h6><i class="material-icons left">tune</i>Filters</h6>
+    <div class="filter-slider"><label>Brightness</label>
+      <input type="range" id="brightness" min="0" max="300" value="100" onchange="applyFilter()">
+      <span class="slider-value" id="brightnessVal">100</span>
+    </div>
+    <div class="filter-slider"><label>Contrast</label>
+      <input type="range" id="contrast" min="0" max="200" value="100" onchange="applyFilter()">
+      <span class="slider-value" id="contrastVal">100</span>
+    </div>
+    <div class="filter-slider"><label>Grayscale</label>
+      <input type="range" id="grayscale" min="0" max="100" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="grayscaleVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Saturation</label>
+      <input type="range" id="saturate" min="0" max="300" value="100" onchange="applyFilter()">
+      <span class="slider-value" id="saturateVal">100</span>
+    </div>
+    <div class="filter-slider"><label>Sepia</label>
+      <input type="range" id="sepia" min="0" max="200" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="sepiaVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Hue</label>
+      <input type="range" id="hue" min="0" max="360" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="hueVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Blur</label>
+      <input type="range" id="blur" min="0" max="10" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="blurVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Invert</label>
+      <input type="range" id="invert" min="0" max="100" value="0" onchange="applyFilter()">
+      <span class="slider-value" id="invertVal">0</span>
+    </div>
+    <div class="filter-slider"><label>Opacity</label>
+      <input type="range" id="opacity" min="10" max="100" value="100" onchange="applyFilter()">
+      <span class="slider-value" id="opacityVal">100</span>
+    </div>
+    <div style="margin-top:10px;">
+      <button class="preset-btn" onclick="preset('brighten')">Brighten</button>
+      <button class="preset-btn" onclick="preset('bw')">B&W</button>
+      <button class="preset-btn" onclick="preset('funky')">Funky</button>
+      <button class="preset-btn" onclick="preset('vintage')">Vintage</button>
+    </div>
+  </div>
+  <div class="bottom-toolbar">
+    <button class="toolbar-btn" onclick="toggleSlidingControls()">
+      <span class="material-icons">palette</span>
+      Filters
+    </button>
+    <button class="toolbar-btn" onclick="addText()">
+      <span class="material-icons">text_fields</span>
+      Text
+    </button>
+    <button class="toolbar-btn" onclick="rotateImage()">
+      <span class="material-icons">rotate_right</span>
+      Rotate
+    </button>
+    <button class="toolbar-btn" onclick="flipImage('h')">
+      <span class="material-icons">swap_horiz</span>
+      Flip H
+    </button>
+    <button class="toolbar-btn" onclick="flipImage('v')">
+      <span class="material-icons">swap_vert</span>
+      Flip V
+    </button>
+    <button class="toolbar-btn" onclick="showBeforeAfter()">
+      <span class="material-icons">compare</span>
+      Compare
+    </button>
+    <button class="toolbar-btn" onclick="undo()">
+      <span class="material-icons">undo</span>
+      Undo
+    </button>
+    <button class="toolbar-btn" onclick="redo()">
+      <span class="material-icons">redo</span>
+      Redo
+    </button>
+    <button class="toolbar-btn" onclick="resetImage()">
+      <span class="material-icons">refresh</span>
+      Reset
+    </button>
+    <button class="toolbar-btn" onclick="downloadImage('png')">
+      <span class="material-icons">file_download</span>
+      PNG
+    </button>
+    <button class="toolbar-btn" onclick="downloadImage('jpg')">
+      <span class="material-icons">file_download</span>
+      JPG
+    </button>
+  </div>
+  <div class="snackbar" id="snackbar"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+
+
+<script>
+  // ========== GLOBALS ==========
+  let canvas = document.getElementById('canvas');
+  let ctx = canvas.getContext('2d');
+  let beforeCanvas = document.getElementById('beforeCanvas');
+  let beforeCtx = beforeCanvas.getContext('2d');
+  let img = new Image();
+  let imgLoaded = false;
+  let imgDataURL = "";
+  let history = [];
+  let redoStack = [];
+  let rotation = 0;
+  let flipH = false, flipV = false;
+  let textElements = [];
+  let darkMode = false;
+
+  const slidingControls = document.getElementById('slidingControls');
+  const filterIds = ["brightness","contrast","grayscale","saturate","sepia","hue","blur","invert","opacity"];
+  const filterDefaults = {
+    brightness:100, contrast:100, grayscale:0, saturate:100, sepia:0,
+    hue:0, blur:0, invert:0, opacity:100
+  };
+  let currentFilterState = {};
+
+  // ========== INITIALIZATION ==========
+  function init() {
+    filterIds.forEach(id => {
+      document.getElementById(id).value = filterDefaults[id];
+      document.getElementById(id + "Val").innerText = filterDefaults[id];
+      currentFilterState[id] = filterDefaults[id];
+    });
+    rotation = 0;
+    flipH = false;
+    flipV = false;
+    textElements = [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    saveHistory();
+  }
+
+  // ========== FILE UPLOAD ==========
+  document.getElementById('fileInput').onchange = uploadImage;
+  function uploadImage(e) {
+    const file = e.target.files ? e.target.files[0] : e.dataTransfer.files[0];
+    if (!file || !file.type.startsWith("image/")) {
+      showSnackbar("Please select an image file!");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      img.onload = function() {
+        // Responsive canvas sizing
+        const maxWidth = window.innerWidth * 0.9;
+        const maxHeight = window.innerHeight * 0.7;
+        let newWidth = img.width, newHeight = img.height;
+        if (newWidth > maxWidth) {
+          newHeight = newHeight * (maxWidth / newWidth);
+          newWidth = maxWidth;
+        }
+        if (newHeight > maxHeight) {
+          newWidth = newWidth * (maxHeight / newHeight);
+          newHeight = maxHeight;
+        }
+        canvas.width = beforeCanvas.width = newWidth;
+        canvas.height = beforeCanvas.height = newHeight;
+        imgLoaded = true;
+        imgDataURL = ev.target.result;
+        init();
+        applyFilter();
+        showSnackbar("Image loaded successfully!");
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ========== APPLY FILTERS & REDRAW CANVAS ==========
+  function applyFilter() {
+    if (!imgLoaded) return;
+    filterIds.forEach(id => {
+      const value = parseFloat(document.getElementById(id).value);
+      document.getElementById(id + "Val").innerText = value;
+      currentFilterState[id] = value;
+    });
+    const filterStr =
+      `brightness(${currentFilterState.brightness}%) ` +
+      `contrast(${currentFilterState.contrast}%) ` +
+      `grayscale(${currentFilterState.grayscale}%) ` +
+      `saturate(${currentFilterState.saturate}%) ` +
+      `sepia(${currentFilterState.sepia}%) ` +
+      `hue-rotate(${currentFilterState.hue}deg) ` +
+      `blur(${currentFilterState.blur}px) ` +
+      `invert(${currentFilterState.invert}%) ` +
+      `opacity(${currentFilterState.opacity}%)`;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.filter = filterStr;
+    drawTransformedElements();
+    ctx.filter = 'none';
+    saveHistory();
+  }
+
+  function drawTransformedElements() {
+    ctx.save();
+    // Center and rotate/flip
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.scale(flipH ? -1 : 1, flipV ? -1 : 1);
+    ctx.rotate(rotation * Math.PI / 180);
+    // Draw image centered
+    ctx.drawImage(img, -canvas.width / 2, -canvas.height / 2, canvas.width, canvas.height);
+    ctx.restore();
+    // Draw text
+    textElements.forEach(textObj => {
+      ctx.save();
+      ctx.font = `${textObj.size}px ${textObj.font}`;
+      ctx.fillStyle = textObj.color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.translate(textObj.x, textObj.y);
+      ctx.rotate(textObj.rotation * Math.PI / 180);
+      ctx.fillText(textObj.text, 0, 0);
+      ctx.restore();
+    });
+  }
+
+  // ========== PRESETS ==========
+  function preset(type) {
+    resetFilters();
+    if (type === "brighten") {
+      document.getElementById('brightness').value = 140;
+      document.getElementById('contrast').value = 120;
+      document.getElementById('saturate').value = 120;
+    } else if (type === "bw") {
+      document.getElementById('grayscale').value = 100;
+      document.getElementById('brightness').value = 120;
+      document.getElementById('contrast').value = 120;
+    } else if (type === "funky") {
+      document.getElementById('hue').value = Math.floor(Math.random() * 360);
+      document.getElementById('contrast').value = 120;
+      document.getElementById('saturate').value = 150;
+    } else if (type === "vintage") {
+      document.getElementById('brightness').value = 120;
+      document.getElementById('saturate').value = 120;
+      document.getElementById('sepia').value = 150;
+    }
+    applyFilter();
+    showSnackbar(`${type.charAt(0).toUpperCase() + type.slice(1)} preset applied!`);
+  }
+
+  // ========== RESET FUNCTIONS ==========
+  function resetFilters() {
+    filterIds.forEach(id => {
+      document.getElementById(id).value = filterDefaults[id];
+      document.getElementById(id + "Val").innerText = filterDefaults[id];
+    });
+  }
+  function resetImage() {
+    if (!imgLoaded) {
+      showSnackbar("No image to reset!");
+      return;
+    }
+    img.onload = function() {
+      imgLoaded = true;
+      init();
+      applyFilter();
+      showSnackbar("Image reset to original!");
+    };
+    img.src = imgDataURL;
+  }
+
+  // ========== UNDO/REDO SYSTEM ==========
+  function saveHistory() {
+    if (!imgLoaded) return;
+    const currentState = {
+      filters: { ...currentFilterState },
+      rotation: rotation,
+      flipH: flipH,
+      flipV: flipV,
+      textElements: JSON.parse(JSON.stringify(textElements)),
+    };
+    const lastState = history[history.length - 1];
+    if (lastState && JSON.stringify(lastState) === JSON.stringify(currentState)) return;
+    history.push(currentState);
+    if (history.length > 30) history.shift();
+    redoStack = [];
+  }
+  function restoreState(state) {
+    filterIds.forEach(id => {
+      document.getElementById(id).value = state.filters[id];
+      document.getElementById(id + "Val").innerText = state.filters[id];
+    });
+    currentFilterState = { ...state.filters };
+    rotation = state.rotation;
+    flipH = state.flipH;
+    flipV = state.flipV;
+    textElements = state.textElements ? JSON.parse(JSON.stringify(state.textElements)) : [];
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.filter =
+      `brightness(${currentFilterState.brightness}%) ` +
+      `contrast(${currentFilterState.contrast}%) ` +
+      `grayscale(${currentFilterState.grayscale}%) ` +
+      `saturate(${currentFilterState.saturate}%) ` +
+      `sepia(${currentFilterState.sepia}%) ` +
+      `hue-rotate(${currentFilterState.hue}deg) ` +
+      `blur(${currentFilterState.blur}px) ` +
+      `invert(${currentFilterState.invert}%) ` +
+      `opacity(${currentFilterState.opacity}%)`;
+    drawTransformedElements();
+    ctx.filter = 'none';
+  }
+  function undo() {
+    if (history.length < 2) {
+      showSnackbar("Nothing to undo!");
+      return;
+    }
+    const currentState = history.pop();
+    redoStack.push(currentState);
+    const prevState = history[history.length - 1];
+    restoreState(prevState);
+    showSnackbar("Undo successful!");
+  }
+  function redo() {
+    if (redoStack.length === 0) {
+      showSnackbar("Nothing to redo!");
+      return;
+    }
+    const nextState = redoStack.pop();
+    history.push(nextState);
+    restoreState(nextState);
+    showSnackbar("Redo successful!");
+  }
+
+  // ========== IMAGE TRANSFORMATIONS ==========
+  function rotateImage() {
+    if (!imgLoaded) {
+      showSnackbar("Please load an image first!");
+      return;
+    }
+    // Swap canvas dimensions for 90/270
+    if (rotation % 180 === 0) {
+      [canvas.width, canvas.height] = [canvas.height, canvas.width];
+      [beforeCanvas.width, beforeCanvas.height] = [beforeCanvas.height, beforeCanvas.width];
+    }
+    rotation = (rotation + 90) % 360;
+    applyFilter();
+    showSnackbar("Image rotated!");
+  }
+  function flipImage(dir) {
+    if (!imgLoaded) {
+      showSnackbar("Please load an image first!");
+      return;
+    }
+    if (dir === 'h') flipH = !flipH;
+    if (dir === 'v') flipV = !flipV;
+    applyFilter();
+    showSnackbar(`Image flipped ${dir === 'h' ? 'horizontally' : 'vertically'}!`);
+  }
+
+  // ========== BEFORE/AFTER COMPARISON ==========
+  function showBeforeAfter() {
+    if (!imgLoaded) {
+      showSnackbar("No image to compare!");
+      return;
+    }
+    beforeCtx.clearRect(0, 0, beforeCanvas.width, beforeCanvas.height);
+    beforeCtx.drawImage(img, 0, 0, beforeCanvas.width, beforeCanvas.height);
+    beforeCanvas.style.display = "block";
+    canvas.style.display = "none";
+    showSnackbar("Showing original image...");
+    setTimeout(() => {
+      beforeCanvas.style.display = "none";
+      canvas.style.display = "block";
+    }, 1800);
+  }
+
+  // ========== DOWNLOAD IMAGE ==========
+  function downloadImage(format) {
+    if (!imgLoaded) {
+      showSnackbar("No image to download!");
+      return;
+    }
+    const dataURL = canvas.toDataURL(`image/${format}`, 1.0);
+    const a = document.createElement('a');
+    a.href = dataURL;
+    a.download = `edited_image.${format}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showSnackbar(`Downloaded as ${format.toUpperCase()}!`);
+  }
+
+  // ========== DARK/LIGHT MODE TOGGLE ==========
+  document.getElementById('toggleMode').onclick = function() {
+    darkMode = !darkMode;
+    document.body.classList.toggle('dark-mode', darkMode);
+    showSnackbar(darkMode ? "Dark mode activated!" : "Light mode activated!");
+  }
+
+  // ========== SNACKBAR NOTIFICATIONS ==========
+  function showSnackbar(msg) {
+    let sb = document.getElementById('snackbar');
+    sb.innerText = msg;
+    sb.classList.add('show');
+    setTimeout(() => sb.classList.remove('show'), 1600);
+  }
+
+  // ========== TEXT ADDITION ==========
+  function addText() {
+    if (!imgLoaded) {
+      showSnackbar("Please load an image first to add text!");
+      return;
+    }
+    const textInput = prompt("Enter your text:", "Hello InShot!");
+    if (textInput !== null && textInput.trim() !== "") {
+      const newText = {
+        text: textInput,
+        x: canvas.width / 2,
+        y: canvas.height / 2,
+        font: "Roboto",
+        size: 40,
+        color: "#FFFFFF",
+        rotation: 0,
+      };
+      textElements.push(newText);
+      applyFilter();
+      showSnackbar("Text added!");
+    } else {
+      showSnackbar("Text addition cancelled or empty!");
+    }
+  }
+  // Edit text on double click
+  canvas.addEventListener('dblclick', function(e) {
+    if (!imgLoaded) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    // Find nearest text
+    let found = false;
+    textElements.forEach((text, i) => {
+      if (Math.abs(x - text.x) < 60 && Math.abs(y - text.y) < 30) {
+        const newText = prompt("Edit text:", text.text);
+        if (newText !== null && newText.trim() !== "") {
+          textElements[i].text = newText;
+          applyFilter();
+          found = true;
+        }
+      }
+    });
+    if (found) showSnackbar("Text edited!");
+  });
+
+  // ========== SLIDING CONTROLS ==========
+  function toggleSlidingControls() {
+    slidingControls.classList.toggle('active');
+  }
+  document.addEventListener('click', function(event) {
+    if (slidingControls.classList.contains('active') &&
+        !slidingControls.contains(event.target) &&
+        !event.target.closest('.toolbar-btn')) {
+      toggleSlidingControls();
+    }
+  });
+  slidingControls.addEventListener('touchmove', (e) => {
+    e.stopPropagation();
+  }, false);
+
+  // ========== PREVENT CONTEXT MENU ON CANVAS ==========
+  canvas.oncontextmenu = (e) => {
+    e.preventDefault();
+    return false;
+  };
+
+  // ========== RESPONSIVE CANVAS ON RESIZE ==========
+  window.addEventListener('resize', () => {
+    if(imgLoaded) {
+      // Recalculate canvas size based on new window dimensions
+      const maxWidth = window.innerWidth * 0.9;
+      const maxHeight = window.innerHeight * 0.7;
+      let newWidth = img.width, newHeight = img.height;
+      if (newWidth > maxWidth) {
+        newHeight = newHeight * (maxWidth / newWidth);
+        newWidth = maxWidth;
+      }
+      if (newHeight > maxHeight) {
+        newWidth = newWidth * (maxHeight / newHeight);
+        newHeight = maxHeight;
+      }
+      canvas.width = beforeCanvas.width = newWidth;
+      canvas.height = beforeCanvas.height = newHeight;
+      applyFilter();
+    }
+  });
+
+  // ========== INIT ON LOAD ==========
+  init();
+</script>
+</body>
+</html>
